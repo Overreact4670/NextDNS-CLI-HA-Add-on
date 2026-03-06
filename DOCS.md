@@ -1,6 +1,6 @@
 # NextDNS CLI Add-on
 
-Runs the [NextDNS CLI](https://github.com/nextdns/nextdns) as a local DNS-over-HTTPS proxy with full per-device identification, multi-profile support, split-horizon DNS, and more.
+Runs the [NextDNS CLI](https://github.com/nextdns/nextdns) as a local DNS-over-HTTPS proxy with full per-device identification, multi-profile support, split-horizon DNS, and IPv4/IPv6 dual-stack support.
 
 ## Why use this instead of pointing your router's DNS at NextDNS?
 
@@ -12,42 +12,48 @@ When you point your router directly at NextDNS, all devices appear as a single e
 
 ### Profiles (`profiles`) — required, list
 
-One or more NextDNS profile IDs. The first match wins. Each entry can be a plain profile ID, or prefixed with a condition:
+One or more NextDNS profile IDs. The first match wins. Each entry can be a plain profile ID or prefixed with a condition.
 
 | Format | Description |
 |---|---|
-| `abcdef` | Default profile, matches all clients |
-| `10.0.3.0/24=abcdef` | Match clients in an IPv4 subnet |
-| `2001:db8::/64=abcdef` | Match clients in an IPv6 subnet |
+| `abcdef` | Default profile — matches all clients |
+| `10.0.10.0/24=abcdef` | Match an IPv4 subnet |
+| `fd00::/64=abcdef` | Match an IPv6 subnet (ULA example) |
+| `2001:db8::/32=abcdef` | Match an IPv6 subnet (global unicast example) |
 | `00:1c:42:2e:60:4a=abcdef` | Match a specific device by MAC address |
 | `eth0=abcdef` | Match all clients behind a network interface |
 
-**Example — different profiles per VLAN:**
+Conditions are evaluated top-to-bottom. Put specific conditions before the catch-all default.
+
+**Example — multiple VLANs with mixed IPv4/IPv6:**
 ```yaml
 profiles:
-  - "10.0.10.0/24=abc123"   # IoT VLAN
-  - "10.0.20.0/24=def456"   # Kids VLAN
-  - "ghijkl"                 # Default for everything else
+  - "10.0.10.0/24=abc123"    # IoT VLAN (IPv4)
+  - "fd00:a::0/64=abc123"    # IoT VLAN (IPv6)
+  - "10.0.20.0/24=def456"    # Kids VLAN (IPv4)
+  - "fd00:b::0/64=def456"    # Kids VLAN (IPv6)
+  - "ghijkl"                  # Default for everything else
 ```
 
 ---
 
 ### Forwarders (`forwarders`) — optional, list
 
-Route specific domains to alternative DNS servers (split-horizon DNS). Useful for internal domains, Pi-hole, or local resolvers.
+Route specific domains to alternative DNS servers (split-horizon DNS). Useful for internal domains, Pi-hole, or local resolvers. Both IPv4 and IPv6 upstreams are supported — IPv6 addresses must use bracket notation.
 
 | Format | Description |
 |---|---|
-| `corp.local=192.168.1.1` | Send `corp.local` to an internal DNS |
+| `corp.local=192.168.1.1` | Send `corp.local` to an IPv4 DNS server |
+| `corp.local=[fd00::1]` | Send `corp.local` to an IPv6 DNS server |
+| `corp.local=[fd00::1],192.168.1.1` | Failover: try IPv6 first, then IPv4 |
 | `example.com=https://dns.example.com` | Use DoH for a domain |
-| `=192.168.1.1` | Catch-all forwarder for all non-NextDNS queries |
-
-Multiple servers (failover) can be comma-separated: `corp.local=192.168.1.1,192.168.1.2`
+| `=192.168.1.1` | Catch-all: send all non-NextDNS queries to this resolver |
 
 **Example:**
 ```yaml
 forwarders:
   - "home.lan=192.168.1.1"
+  - "home.lan=[fd00::1]"
   - "corp.internal=10.0.0.53"
 ```
 
@@ -55,12 +61,29 @@ forwarders:
 
 ### Listen addresses (`listen`) — list
 
-One or more `address:port` pairs to listen on. Repeat to serve multiple interfaces/VLANs.
+One or more `address:port` pairs to listen on. To serve both IPv4 and IPv6 clients, include both a standard and an IPv6 address. IPv6 addresses must use bracket notation.
 
+| Example | Description |
+|---|---|
+| `localhost:53` | IPv4 loopback only |
+| `[::1]:53` | IPv6 loopback only |
+| `0.0.0.0:53` | All IPv4 interfaces |
+| `[::]:53` | All IPv6 interfaces |
+| `192.168.1.10:53` | Specific IPv4 interface |
+| `[fd00::10]:53` | Specific IPv6 interface |
+
+**Default (dual-stack loopback):**
 ```yaml
 listen:
-  - "0.0.0.0:53"       # All interfaces
-  - "192.168.10.1:53"  # Or specific interface IPs
+  - "localhost:53"
+  - "[::1]:53"
+```
+
+**Full dual-stack on all interfaces:**
+```yaml
+listen:
+  - "0.0.0.0:53"
+  - "[::]:53"
 ```
 
 ---
@@ -70,7 +93,7 @@ listen:
 | Option | Default | Description |
 |---|---|---|
 | `report_client_info` | `true` | Send device hostnames to NextDNS for per-device stats |
-| `discovery_dns` | `""` | IP of your router/DNS server to query for device names. If empty, uses the DHCP-learned address |
+| `discovery_dns` | `""` | IP of your router/DNS for device name discovery. Accepts IPv4 (`192.168.1.1`) or bracketed IPv6 (`[fd00::1]`). Leave empty to auto-detect |
 | `mdns` | `"all"` | mDNS hostname discovery. `"all"` = all interfaces, `"eth0"` = specific interface, `"disabled"` = off |
 | `use_hosts` | `true` | Use the system `/etc/hosts` file for name resolution |
 
@@ -82,7 +105,7 @@ listen:
 |---|---|---|
 | `cache_size` | `"10MB"` | DNS cache size. Use `0` to disable. Accepts `kB`, `MB`, `GB` |
 | `cache_max_age` | `"0s"` | Force cache entries stale after this duration, regardless of TTL. `0s` = disabled |
-| `max_ttl` | `"5s"` | Cap the TTL advertised to clients. Keeps client-side caches short so they rely on the CLI cache |
+| `max_ttl` | `"5s"` | Cap the TTL advertised to clients — keeps client caches short so they rely on the CLI cache |
 
 ---
 
@@ -90,7 +113,7 @@ listen:
 
 | Option | Default | Description |
 |---|---|---|
-| `bogus_priv` | `true` | Answer all reverse lookups for private IP ranges (192.168.x.x, 10.x.x.x, etc.) with NXDOMAIN instead of forwarding upstream |
+| `bogus_priv` | `true` | Answer reverse lookups for private ranges with NXDOMAIN instead of forwarding upstream. Covers IPv4 private ranges (`10.x`, `172.16.x`, `192.168.x`) **and** IPv6 ULA (`fc00::/7`) and link-local (`fe80::/10`) |
 
 ---
 
@@ -113,13 +136,35 @@ listen:
 
 ## Setup Steps
 
-1. **Get your Profile ID(s)** from [nextdns.io](https://nextdns.io) — it's the 6-character code on your profile page.
+1. **Get your Profile ID(s)** from [nextdns.io](https://nextdns.io) — the 6-character code on your profile page.
 2. **Configure the add-on** with at least one entry in `profiles`.
-3. **Set `discovery_dns`** to your router's LAN IP (e.g. `192.168.1.1`) for best hostname resolution.
-4. **Start the add-on** and check the log for any errors.
-5. **Point your router's DHCP** DNS setting to the IP of your Home Assistant machine.
+3. **Set `discovery_dns`** to your router's LAN IP for best hostname resolution. Use bracket notation for IPv6: `[fd00::1]`.
+4. **Configure `listen`** — the default includes both `localhost:53` and `[::1]:53` for dual-stack loopback. Change to `0.0.0.0:53` / `[::]:53` if you want to serve the whole network directly from HA.
+5. **Start the add-on** and check the log for errors.
+6. **Point your router's DHCP** DNS setting to your Home Assistant machine's IP (both A and AAAA records if your router supports it).
 
-> **Note:** This add-on uses `host_network: true` and claims port 53 on your HA machine. Make sure nothing else (e.g. systemd-resolved) is bound to port 53.
+> **Note:** This add-on uses `host_network: true` and claims port 53 on your HA machine for both IPv4 and IPv6. Make sure nothing else (e.g. `systemd-resolved`) is bound to port 53.
+
+---
+
+## Dual-Stack Network Example
+
+For a typical home network with both IPv4 and IPv6:
+
+```yaml
+profiles:
+  - "10.0.0.0/8=abcdef"      # All IPv4 LAN clients
+  - "fd00::/8=abcdef"         # All IPv6 ULA clients
+  - "abcdef"                   # Fallback
+
+listen:
+  - "0.0.0.0:53"
+  - "[::]:53"
+
+discovery_dns: "192.168.1.1"  # or "[fd00::1]" if your router has IPv6
+
+bogus_priv: true               # Blocks private reverse lookups for both IPv4 and IPv6
+```
 
 ---
 
