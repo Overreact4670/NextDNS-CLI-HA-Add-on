@@ -29,4 +29,4 @@ Full-featured NextDNS CLI proxy supporting:
 4. Set your `profile_id` in the Configuration tab and start the add-on
 5. Point your router's DHCP DNS to your Home Assistant machine's LAN IP
 
-See [nextdns-cli/DOCS.md]([NextDNS-CLI-HA-Add-on/blob/main/DOCS.md]) for full configuration details.
+See [nextdns-cli/DOCS.md]([DOCS.md]) for full configuration details.
