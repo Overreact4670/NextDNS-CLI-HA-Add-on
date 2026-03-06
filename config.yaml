@@ -1,8 +1,8 @@
 name: "NextDNS CLI"
-version: "1.1.0"
+version: "1.2.0"
 slug: "nextdns_cli"
 description: "Run the NextDNS CLI as a DNS-over-HTTPS proxy with per-device identification"
-url: "https://github.com/Overreact4670/NextDNS-CLI-HA-Add-on/"
+url: "https://github.com/YOUR_USERNAME/ha-addon-nextdns"
 arch:
   - amd64
   - aarch64
@@ -15,21 +15,53 @@ privileged:
   - NET_ADMIN
   - NET_RAW
 options:
+  # --- Profiles ---
+  # Plain ID, or prefixed with a condition:
+  #   IPv4 subnet:  "10.0.10.0/24=abcdef"
+  #   IPv6 subnet:  "fd00::/64=abcdef"
+  #   MAC address:  "00:1c:42:2e:60:4a=abcdef"
+  #   Interface:    "eth0=abcdef"
   profiles:
     - "YOUR_PROFILE_ID"
+
+  # --- Forwarders (split-horizon DNS) ---
+  # Route domains to alternative resolvers. IPv6 upstreams use bracket notation:
+  #   "corp.local=192.168.1.1"
+  #   "corp.local=[fd00::1]"
+  #   "corp.local=[fd00::1],192.168.1.1"   (failover)
+  #   "=192.168.1.1"                         (catch-all)
   forwarders: []
+
+  # --- Listen addresses ---
+  # Add "[::1]:53" or "[::]:53" alongside "localhost:53" to serve IPv6 clients.
   listen:
     - "localhost:53"
+    - "[::1]:53"
+
+  # --- Client identification ---
   report_client_info: true
+  # IPv4 or IPv6 address of your router/DNS for hostname discovery:
+  #   "192.168.1.1" or "[fd00::1]"
   discovery_dns: ""
   mdns: "all"
   use_hosts: true
+
+  # --- Cache ---
   cache_size: "10MB"
   cache_max_age: "0s"
   max_ttl: "5s"
+
+  # --- Privacy ---
+  # Blocks reverse lookups for:
+  #   IPv4 private ranges (10.x, 172.16.x, 192.168.x)
+  #   IPv6 ULA (fc00::/7) and link-local (fe80::/10)
   bogus_priv: true
+
+  # --- Performance ---
   timeout: "5s"
   max_inflight_requests: 256
+
+  # --- Logging ---
   log_queries: false
 
 schema:
