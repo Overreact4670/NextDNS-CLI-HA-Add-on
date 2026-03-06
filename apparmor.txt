@@ -1,0 +1,73 @@
+#include <tunables/global>
+
+profile ADDON_SLUG flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+
+  # Base access
+  file,
+  signal (send) set=(kill,term,int,hup,cont),
+
+  # S6-Overlay
+  /init ix,
+  /bin/** ix,
+  /usr/bin/** ix,
+  /run/{s6,s6-rc*,service}/** ix,
+  /package/** ix,
+  /command/** ix,
+  /etc/services.d/** rwix,
+  /etc/cont-init.d/** rwix,
+  /etc/cont-finish.d/** rwix,
+  /run/{,**} rwk,
+  /dev/tty rw,
+
+  # Bashio
+  /usr/lib/bashio/** ix,
+  /tmp/** rwk,
+
+  # nextdns binary
+  /usr/sbin/nextdns ix,
+  /usr/bin/nextdns ix,
+
+  # Add-on data (cache, config, state)
+  /data/{,**} rw,
+
+  # System config
+  /etc/hosts r,
+  /etc/resolv.conf r,
+  /etc/nsswitch.conf r,
+  /etc/ssl/{,**} r,
+  /etc/ca-certificates/{,**} r,
+  /usr/share/ca-certificates/{,**} r,
+
+  # Libraries and shared data
+  /lib/{,**} rm,
+  /lib64/{,**} rm,
+  /usr/lib/{,**} rm,
+  /usr/share/{,**} r,
+
+  # /proc for network interfaces and client identification
+  @{PROC}/ r,
+  @{PROC}/@{pid}/{,**} r,
+  @{PROC}/sys/net/{,**} r,
+  @{PROC}/sys/kernel/hostname r,
+
+  # Network (DNS listen + DoH upstream)
+  network inet dgram,
+  network inet stream,
+  network inet6 dgram,
+  network inet6 stream,
+  network netlink raw,
+
+  # Capabilities for port 53 binding and raw sockets
+  capability net_bind_service,
+  capability net_admin,
+  capability net_raw,
+  capability setgid,
+  capability setuid,
+  capability dac_override,
+
+  # Deny sensitive paths
+  deny @{PROC}/sys/kernel/core_pattern w,
+  deny /sys/firmware/{,**} rw,
+  deny /sys/kernel/security/{,**} rw,
+}
