@@ -1,0 +1,32 @@
+name: "NextDNS CLI"
+version: "1.0.0"
+slug: "nextdns_cli"
+description: "Run the NextDNS CLI as a DNS-over-HTTPS proxy with per-device identification"
+url: "https://github.com/YOUR_USERNAME/ha-addon-nextdns"
+arch:
+  - amd64
+  - aarch64
+  - armv7
+startup: system
+boot: auto
+init: false
+host_network: true
+privileged:
+  - NET_ADMIN
+  - NET_RAW
+options:
+  profile_id: ""
+  report_client_info: true
+  cache_size: "10MB"
+  max_ttl: "5s"
+  listen: "localhost:53"
+  log_queries: false
+  discovery_dns: ""
+schema:
+  profile_id: str
+  report_client_info: bool
+  cache_size: str
+  max_ttl: str
+  listen: str
+  log_queries: bool
+  discovery_dns: str
