@@ -1,41 +1,115 @@
 #!/usr/bin/with-contenv bashio
 
-# Read configuration from HA options
-PROFILE_ID=$(bashio::config 'profile_id')
-REPORT_CLIENT_INFO=$(bashio::config 'report_client_info')
-CACHE_SIZE=$(bashio::config 'cache_size')
-MAX_TTL=$(bashio::config 'max_ttl')
-LISTEN=$(bashio::config 'listen')
-LOG_QUERIES=$(bashio::config 'log_queries')
-DISCOVERY_DNS=$(bashio::config 'discovery_dns')
+# ---------------------------------------------------------------------------
+# NextDNS CLI Add-on - run.sh
+# Reads all options from HA config and builds the nextdns run command.
+# ---------------------------------------------------------------------------
 
-# Validate that a profile ID was provided
-if bashio::var.is_empty "${PROFILE_ID}"; then
-    bashio::log.fatal "You must set a NextDNS profile_id in the add-on configuration!"
+# --- Profiles (required, repeatable) ---
+PROFILES=()
+for profile in $(bashio::config 'profiles'); do
+    PROFILES+=("-profile" "${profile}")
+done
+
+if [ ${#PROFILES[@]} -eq 0 ]; then
+    bashio::log.fatal "You must configure at least one profile in the add-on options!"
     exit 1
 fi
 
-bashio::log.info "Starting NextDNS CLI..."
-bashio::log.info "Profile: ${PROFILE_ID}"
-bashio::log.info "Listening on: ${LISTEN}"
+# --- Forwarders (optional, repeatable) ---
+FORWARDERS=()
+for fwd in $(bashio::config 'forwarders'); do
+    FORWARDERS+=("-forwarder" "${fwd}")
+done
 
-# Build the nextdns run command (use 'run' instead of 'install' so it
-# runs in the foreground without touching the host's DNS settings)
-ARGS="-config ${PROFILE_ID} -listen ${LISTEN} -cache-size ${CACHE_SIZE} -max-ttl ${MAX_TTL}"
+# --- Listen addresses (repeatable) ---
+LISTEN=()
+for addr in $(bashio::config 'listen'); do
+    LISTEN+=("-listen" "${addr}")
+done
 
-if bashio::var.true "${REPORT_CLIENT_INFO}"; then
-    ARGS="${ARGS} -report-client-info"
+if [ ${#LISTEN[@]} -eq 0 ]; then
+    LISTEN=("-listen" "localhost:53")
 fi
 
-if bashio::var.true "${LOG_QUERIES}"; then
-    ARGS="${ARGS} -log-queries"
+# --- Client identification ---
+REPORT_CLIENT_INFO=$(bashio::config 'report_client_info')
+DISCOVERY_DNS=$(bashio::config 'discovery_dns')
+MDNS=$(bashio::config 'mdns')
+USE_HOSTS=$(bashio::config 'use_hosts')
+
+# --- Cache ---
+CACHE_SIZE=$(bashio::config 'cache_size')
+CACHE_MAX_AGE=$(bashio::config 'cache_max_age')
+MAX_TTL=$(bashio::config 'max_ttl')
+
+# --- Privacy ---
+BOGUS_PRIV=$(bashio::config 'bogus_priv')
+
+# --- Performance ---
+TIMEOUT=$(bashio::config 'timeout')
+MAX_INFLIGHT=$(bashio::config 'max_inflight_requests')
+
+# --- Logging ---
+LOG_QUERIES=$(bashio::config 'log_queries')
+
+# ---------------------------------------------------------------------------
+# Build argument array
+# ---------------------------------------------------------------------------
+ARGS=()
+
+# Profiles
+ARGS+=("${PROFILES[@]}")
+
+# Forwarders
+if [ ${#FORWARDERS[@]} -gt 0 ]; then
+    ARGS+=("${FORWARDERS[@]}")
+fi
+
+# Listen
+ARGS+=("${LISTEN[@]}")
+
+# Client info
+if bashio::var.true "${REPORT_CLIENT_INFO}"; then
+    ARGS+=("-report-client-info")
 fi
 
 if ! bashio::var.is_empty "${DISCOVERY_DNS}"; then
-    ARGS="${ARGS} -discovery-dns ${DISCOVERY_DNS}"
+    ARGS+=("-discovery-dns" "${DISCOVERY_DNS}")
 fi
 
-bashio::log.info "Running: nextdns run ${ARGS}"
+ARGS+=("-mdns" "${MDNS}")
 
-# shellcheck disable=SC2086
-exec nextdns run ${ARGS}
+if bashio::var.true "${USE_HOSTS}"; then
+    ARGS+=("-use-hosts")
+fi
+
+# Cache
+ARGS+=("-cache-size" "${CACHE_SIZE}")
+ARGS+=("-cache-max-age" "${CACHE_MAX_AGE}")
+ARGS+=("-max-ttl" "${MAX_TTL}")
+
+# Privacy
+if bashio::var.true "${BOGUS_PRIV}"; then
+    ARGS+=("-bogus-priv")
+fi
+
+# Performance
+ARGS+=("-timeout" "${TIMEOUT}")
+ARGS+=("-max-inflight-requests" "${MAX_INFLIGHT}")
+
+# Logging
+if bashio::var.true "${LOG_QUERIES}"; then
+    ARGS+=("-log-queries")
+fi
+
+# ---------------------------------------------------------------------------
+# Launch
+# ---------------------------------------------------------------------------
+bashio::log.info "Starting NextDNS CLI..."
+bashio::log.info "Profiles:   ${PROFILES[*]}"
+bashio::log.info "Listen:     ${LISTEN[*]}"
+bashio::log.info "mDNS:       ${MDNS}"
+bashio::log.info "Cache size: ${CACHE_SIZE}"
+
+exec nextdns run "${ARGS[@]}"
