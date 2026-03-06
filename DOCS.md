@@ -1,40 +1,128 @@
 # NextDNS CLI Add-on
 
-This add-on runs the [NextDNS CLI](https://github.com/nextdns/nextdns) as a local DNS-over-HTTPS proxy, enabling per-device identification on your network.
+Runs the [NextDNS CLI](https://github.com/nextdns/nextdns) as a local DNS-over-HTTPS proxy with full per-device identification, multi-profile support, split-horizon DNS, and more.
 
-## Why use this instead of just pointing DNS at NextDNS?
+## Why use this instead of pointing your router's DNS at NextDNS?
 
-When you point your router's DNS to NextDNS directly, all devices show up under your external IP. The CLI proxy runs locally and reports each device's hostname individually, giving you per-device stats and filtering in the NextDNS dashboard.
+When you point your router directly at NextDNS, all devices appear as a single external IP. The CLI proxy runs locally and reports each device's hostname individually — giving you per-device stats, filtering, and logging in the NextDNS dashboard.
 
-## Setup
+---
 
-### 1. Get your Profile ID
-Log into [nextdns.io](https://nextdns.io), go to your profile, and copy the 6-character Profile ID (e.g. `abc123`).
+## Configuration Reference
 
-### 2. Configure the add-on
+### Profiles (`profiles`) — required, list
 
-| Option | Description | Default |
+One or more NextDNS profile IDs. The first match wins. Each entry can be a plain profile ID, or prefixed with a condition:
+
+| Format | Description |
+|---|---|
+| `abcdef` | Default profile, matches all clients |
+| `10.0.3.0/24=abcdef` | Match clients in an IPv4 subnet |
+| `2001:db8::/64=abcdef` | Match clients in an IPv6 subnet |
+| `00:1c:42:2e:60:4a=abcdef` | Match a specific device by MAC address |
+| `eth0=abcdef` | Match all clients behind a network interface |
+
+**Example — different profiles per VLAN:**
+```yaml
+profiles:
+  - "10.0.10.0/24=abc123"   # IoT VLAN
+  - "10.0.20.0/24=def456"   # Kids VLAN
+  - "ghijkl"                 # Default for everything else
+```
+
+---
+
+### Forwarders (`forwarders`) — optional, list
+
+Route specific domains to alternative DNS servers (split-horizon DNS). Useful for internal domains, Pi-hole, or local resolvers.
+
+| Format | Description |
+|---|---|
+| `corp.local=192.168.1.1` | Send `corp.local` to an internal DNS |
+| `example.com=https://dns.example.com` | Use DoH for a domain |
+| `=192.168.1.1` | Catch-all forwarder for all non-NextDNS queries |
+
+Multiple servers (failover) can be comma-separated: `corp.local=192.168.1.1,192.168.1.2`
+
+**Example:**
+```yaml
+forwarders:
+  - "home.lan=192.168.1.1"
+  - "corp.internal=10.0.0.53"
+```
+
+---
+
+### Listen addresses (`listen`) — list
+
+One or more `address:port` pairs to listen on. Repeat to serve multiple interfaces/VLANs.
+
+```yaml
+listen:
+  - "0.0.0.0:53"       # All interfaces
+  - "192.168.10.1:53"  # Or specific interface IPs
+```
+
+---
+
+### Client Identification
+
+| Option | Default | Description |
 |---|---|---|
-| `profile_id` | Your NextDNS profile ID (required) | `""` |
-| `report_client_info` | Send device hostnames to NextDNS for per-device stats | `true` |
-| `listen` | Address and port the proxy listens on | `localhost:53` |
-| `cache_size` | Local DNS cache size | `10MB` |
-| `max_ttl` | Max time-to-live for cached entries | `5s` |
-| `discovery_dns` | Your router/LAN IP for mDNS hostname discovery (e.g. `192.168.1.1`) | `""` |
-| `log_queries` | Log all DNS queries to the add-on log | `false` |
+| `report_client_info` | `true` | Send device hostnames to NextDNS for per-device stats |
+| `discovery_dns` | `""` | IP of your router/DNS server to query for device names. If empty, uses the DHCP-learned address |
+| `mdns` | `"all"` | mDNS hostname discovery. `"all"` = all interfaces, `"eth0"` = specific interface, `"disabled"` = off |
+| `use_hosts` | `true` | Use the system `/etc/hosts` file for name resolution |
 
-### 3. Point your devices at the add-on
+---
 
-After starting the add-on, configure your router's DHCP to hand out the IP address of your Home Assistant machine as the DNS server. All DNS queries will then flow through the CLI proxy to NextDNS.
+### Cache
 
-> **Note:** The add-on uses `host_network: true` so it shares the host's network namespace. Port 53 on your HA machine will be taken by this add-on.
+| Option | Default | Description |
+|---|---|---|
+| `cache_size` | `"10MB"` | DNS cache size. Use `0` to disable. Accepts `kB`, `MB`, `GB` |
+| `cache_max_age` | `"0s"` | Force cache entries stale after this duration, regardless of TTL. `0s` = disabled |
+| `max_ttl` | `"5s"` | Cap the TTL advertised to clients. Keeps client-side caches short so they rely on the CLI cache |
 
-### 4. (Optional) Use with the NextDNS HA integration
+---
 
-Install the official NextDNS integration (`Settings → Integrations → NextDNS`) alongside this add-on to get stats and control sensors in Home Assistant.
+### Privacy
 
-## Troubleshooting
+| Option | Default | Description |
+|---|---|---|
+| `bogus_priv` | `true` | Answer all reverse lookups for private IP ranges (192.168.x.x, 10.x.x.x, etc.) with NXDOMAIN instead of forwarding upstream |
 
-- Check the add-on log for errors.
-- Make sure nothing else on your HA machine is using port 53 (e.g. the built-in DNS integration).
-- If using a Pi-hole, configure Pi-hole's upstream DNS to point to `127.0.0.1:53` (this add-on) instead of using NextDNS directly.
+---
+
+### Performance
+
+| Option | Default | Description |
+|---|---|---|
+| `timeout` | `"5s"` | Maximum duration for an upstream DNS request before failing |
+| `max_inflight_requests` | `256` | Maximum number of concurrent DNS queries |
+
+---
+
+### Logging
+
+| Option | Default | Description |
+|---|---|---|
+| `log_queries` | `false` | Log all DNS queries to the add-on log (verbose — use for debugging) |
+
+---
+
+## Setup Steps
+
+1. **Get your Profile ID(s)** from [nextdns.io](https://nextdns.io) — it's the 6-character code on your profile page.
+2. **Configure the add-on** with at least one entry in `profiles`.
+3. **Set `discovery_dns`** to your router's LAN IP (e.g. `192.168.1.1`) for best hostname resolution.
+4. **Start the add-on** and check the log for any errors.
+5. **Point your router's DHCP** DNS setting to the IP of your Home Assistant machine.
+
+> **Note:** This add-on uses `host_network: true` and claims port 53 on your HA machine. Make sure nothing else (e.g. systemd-resolved) is bound to port 53.
+
+---
+
+## Optional: Pair with the NextDNS HA Integration
+
+Install the official **NextDNS** integration (`Settings → Integrations → NextDNS`) alongside this add-on to get query stats, block counts, and device status as sensors in Home Assistant.
