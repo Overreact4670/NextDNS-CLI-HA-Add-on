@@ -1,6 +1,6 @@
 # Home Assistant NextDNS CLI Add-on Repository
 
-[![Add repository to HA](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FYOUR_USERNAME%2Fha-addon-nextdns)
+[![Add repository to HA](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FOverreact4670%2FNextDNS-CLI-HA-Add-on)
 
 A Home Assistant add-on that runs the [NextDNS CLI](https://github.com/nextdns/nextdns) as a local DNS-over-HTTPS proxy on your Home Assistant machine.
 
@@ -24,7 +24,7 @@ Full-featured NextDNS CLI proxy supporting:
 ## Installation
 
 1. Click the button above, **or** go to **Settings → Add-ons → Add-on Store → ⋮ → Repositories**
-2. Add: `https://github.com/YOUR_USERNAME/ha-addon-nextdns`
+2. Add: `https://github.com/Overreact4670/NextDNS-CLI-HA-Add-on`
 3. Find **NextDNS CLI** in the store and install it
 4. Set your `profile_id` in the Configuration tab and start the add-on
 5. Point your router's DHCP DNS to your Home Assistant machine's LAN IP
