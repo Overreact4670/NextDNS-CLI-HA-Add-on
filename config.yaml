@@ -1,8 +1,8 @@
 name: "NextDNS CLI"
-version: "1.0.0"
+version: "1.1.0"
 slug: "nextdns_cli"
 description: "Run the NextDNS CLI as a DNS-over-HTTPS proxy with per-device identification"
-url: "https://github.com/YOUR_USERNAME/ha-addon-nextdns"
+url: "https://github.com/Overreact4670/NextDNS-CLI-HA-Add-on/"
 arch:
   - amd64
   - aarch64
@@ -15,18 +15,38 @@ privileged:
   - NET_ADMIN
   - NET_RAW
 options:
-  profile_id: ""
+  profiles:
+    - "YOUR_PROFILE_ID"
+  forwarders: []
+  listen:
+    - "localhost:53"
   report_client_info: true
-  cache_size: "10MB"
-  max_ttl: "5s"
-  listen: "localhost:53"
-  log_queries: false
   discovery_dns: ""
+  mdns: "all"
+  use_hosts: true
+  cache_size: "10MB"
+  cache_max_age: "0s"
+  max_ttl: "5s"
+  bogus_priv: true
+  timeout: "5s"
+  max_inflight_requests: 256
+  log_queries: false
+
 schema:
-  profile_id: str
+  profiles:
+    - str
+  forwarders:
+    - str
+  listen:
+    - str
   report_client_info: bool
-  cache_size: str
-  max_ttl: str
-  listen: str
-  log_queries: bool
   discovery_dns: str
+  mdns: str
+  use_hosts: bool
+  cache_size: str
+  cache_max_age: str
+  max_ttl: str
+  bogus_priv: bool
+  timeout: str
+  max_inflight_requests: int
+  log_queries: bool
