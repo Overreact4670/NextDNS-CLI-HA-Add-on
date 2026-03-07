@@ -1,5 +1,5 @@
 name: "NextDNS CLI"
-version: "2.2.0"
+version: "2.3.0"
 slug: "nextdns_cli"
 description: "Run the NextDNS CLI as a local DNS-over-HTTPS proxy with full per-device identification"
 url: "https://github.com/Overreact4670/NextDNS-CLI-HA-App"
@@ -22,7 +22,6 @@ options:
   listen:
     - "0.0.0.0:53"
   report_client_info: true
-  discovery_dns: ""
   mdns: "all"
   use_hosts: true
   cache_size: "10MB"
@@ -44,7 +43,7 @@ schema:
     - str
   report_client_info: bool
   discovery_dns: str?
-  mdns: "list(all|disabled)"
+  mdns: str
   use_hosts: bool
   cache_size: str
   cache_max_age: str
