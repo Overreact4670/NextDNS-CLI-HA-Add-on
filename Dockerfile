@@ -13,7 +13,7 @@ LABEL \
 # Install NextDNS CLI from the official Alpine repository
 # set -e ensures any failure aborts the build immediately
 RUN set -e \
-    && wget -O /etc/apk/keys/nextdns.pub https://repo.nextdns.io/nextdns.pub \
+    && wget --timeout=30 --tries=3 -O /etc/apk/keys/nextdns.pub https://repo.nextdns.io/nextdns.pub \
     && echo "https://repo.nextdns.io/apk" >> /etc/apk/repositories \
     && apk update \
     && apk add --no-cache nextdns \
