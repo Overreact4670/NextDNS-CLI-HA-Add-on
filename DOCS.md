@@ -1,4 +1,4 @@
-# NextDNS CLI app
+# NextDNS CLI App
 
 Runs the [NextDNS CLI](https://github.com/nextdns/nextdns) as a local DNS-over-HTTPS (DoH) proxy on your Home Assistant machine, providing full per-device identification, multi-profile support, split-horizon DNS, and IPv4/IPv6 dual-stack out of the box.
 
