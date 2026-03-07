@@ -19,9 +19,11 @@ options:
   profiles:
     - "YOUR_PROFILE_ID"
   forwarders: []
+  # nextdns automatically opens IPv6 sockets alongside IPv4 — you do not
+  # need to add "[::]:53" here. Doing so can cause an EADDRINUSE conflict
+  # since nextdns will have already bound :::53 internally.
   listen:
     - "0.0.0.0:53"
-    - "[::]:53"
   report_client_info: true
   discovery_dns: ""
   mdns: "all"
