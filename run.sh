@@ -31,11 +31,13 @@ bashio::log.info "Profiles configured: ${profile_count}"
 # FORWARDERS (optional, repeatable)
 # ---------------------------------------------------------------------------
 forwarder_count=0
-while read -r fwd; do
-    [ -z "${fwd}" ] && continue
-    ARGS+=("-forwarder" "${fwd}")
-    forwarder_count=$((forwarder_count + 1))
-done <<< "$(bashio::config 'forwarders[]' 2>/dev/null || true)"
+if bashio::config.exists 'forwarders' && ! bashio::config.is_empty 'forwarders'; then
+    while read -r fwd; do
+        [ -z "${fwd}" ] && continue
+        ARGS+=("-forwarder" "${fwd}")
+        forwarder_count=$((forwarder_count + 1))
+    done <<< "$(bashio::config 'forwarders[]')"
+fi
 
 if [ "${forwarder_count}" -gt 0 ]; then
     bashio::log.info "Forwarders configured: ${forwarder_count}"
@@ -65,10 +67,10 @@ if bashio::config.true 'report_client_info'; then
     bashio::log.info "Client info reporting: enabled"
 fi
 
-# discovery_dns is optional (str?) — only add if actually set
-if bashio::config.exists 'discovery_dns' && bashio::config.has_value 'discovery_dns'; then
+# discovery_dns is optional (str?) — only pass the flag if the user set a value
+if bashio::config.exists 'discovery_dns'; then
     DISCOVERY_DNS=$(bashio::config 'discovery_dns')
-    if [ -n "${DISCOVERY_DNS}" ]; then
+    if [ -n "${DISCOVERY_DNS}" ] && [ "${DISCOVERY_DNS}" != "null" ]; then
         ARGS+=("-discovery-dns" "${DISCOVERY_DNS}")
         bashio::log.info "Discovery DNS: ${DISCOVERY_DNS}"
     fi
