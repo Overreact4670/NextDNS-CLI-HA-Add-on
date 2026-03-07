@@ -273,22 +273,6 @@ This pairs well with the CLI app — the CLI handles local proxying and device i
 
 ---
 
-## Security Rating
-
-This app achieves a rating of **4 out of 6** in Home Assistant's security scoring system.
-
-| Factor | Impact | Reason |
-|---|---|---|
-| Base score | +5 | Starting value |
-| `host_network: true` | -1 | Required — the CLI must bind to port 53 on the host network to serve LAN devices |
-| `NET_ADMIN` / `NET_RAW` privileges | -1 | Required — needed to open a raw DNS socket on port 53 |
-| AppArmor profile present | +1 | Restricts the nextdns process to only the files, paths, and network operations it legitimately needs |
-| **Total** | **4/6** | — |
-
-The two point deductions cannot be avoided without fundamentally breaking the app's purpose. The AppArmor profile recovers one point and also provides real security value — it prevents the nextdns process from accessing arbitrary parts of the filesystem or making unexpected system calls, even if the container were somehow compromised.
-
----
-
 ## Troubleshooting
 
 **Queries not appearing in NextDNS dashboard**
