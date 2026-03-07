@@ -16,6 +16,7 @@ ARGS=()
 # ---------------------------------------------------------------------------
 profile_count=0
 while read -r profile; do
+    [ -z "${profile}" ] && continue
     ARGS+=("-profile" "${profile}")
     profile_count=$((profile_count + 1))
 done <<< "$(bashio::config 'profiles[]')"
@@ -67,8 +68,8 @@ if bashio::config.true 'report_client_info'; then
     bashio::log.info "Client info reporting: enabled"
 fi
 
-DISCOVERY_DNS=$(bashio::config 'discovery_dns')
-if ! bashio::var.is_empty "${DISCOVERY_DNS}"; then
+if bashio::config.exists 'discovery_dns' && bashio::config.has_value 'discovery_dns'; then
+    DISCOVERY_DNS=$(bashio::config 'discovery_dns')
     ARGS+=("-discovery-dns" "${DISCOVERY_DNS}")
     bashio::log.info "Discovery DNS: ${DISCOVERY_DNS}"
 fi
