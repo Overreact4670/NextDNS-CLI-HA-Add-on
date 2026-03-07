@@ -1,12 +1,12 @@
 #!/usr/bin/with-contenv bashio
 
 # ===========================================================================
-# NextDNS CLI Add-on — run.sh
-# Reads all options from Home Assistant add-on config and launches the
+# NextDNS CLI App — run.sh
+# Reads all options from Home Assistant App config and launches the
 # nextdns CLI daemon in the foreground.
 # ===========================================================================
 
-bashio::log.info "Initialising NextDNS CLI add-on..."
+bashio::log.info "Initialising NextDNS CLI App..."
 
 ARGS=()
 
@@ -20,7 +20,7 @@ for profile in $(bashio::config 'profiles'); do
 done
 
 if [ "${profile_count}" -eq 0 ]; then
-    bashio::log.fatal "No profiles configured! Set at least one profile ID in the add-on options."
+    bashio::log.fatal "No profiles configured! Set at least one profile ID in the app options."
     exit 1
 fi
 
