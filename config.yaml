@@ -1,5 +1,5 @@
 name: "NextDNS CLI"
-version: "2.1.0"
+version: "2.2.0"
 slug: "nextdns_cli"
 description: "Run the NextDNS CLI as a local DNS-over-HTTPS proxy with full per-device identification"
 url: "https://github.com/Overreact4670/NextDNS-CLI-HA-App"
@@ -19,9 +19,6 @@ options:
   profiles:
     - "YOUR_PROFILE_ID"
   forwarders: []
-  # nextdns automatically opens IPv6 sockets alongside IPv4 — you do not
-  # need to add "[::]:53" here. Doing so can cause an EADDRINUSE conflict
-  # since nextdns will have already bound :::53 internally.
   listen:
     - "0.0.0.0:53"
   report_client_info: true
@@ -47,7 +44,7 @@ schema:
     - str
   report_client_info: bool
   discovery_dns: str?
-  mdns: str
+  mdns: "list(all|disabled)"
   use_hosts: bool
   cache_size: str
   cache_max_age: str
@@ -55,6 +52,6 @@ schema:
   bogus_priv: bool
   detect_captive_portals: bool
   timeout: str
-  max_inflight_requests: int
+  max_inflight_requests: "int(1,)"
   log_queries: bool
   debug: bool
