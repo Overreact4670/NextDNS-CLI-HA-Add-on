@@ -1,4 +1,4 @@
-# NextDNS CLI Add-on
+# NextDNS CLI
 
 Runs the [NextDNS CLI](https://github.com/nextdns/nextdns) as a local DNS-over-HTTPS (DoH) proxy on your Home Assistant machine, providing full per-device identification, multi-profile support, split-horizon DNS, and IPv4/IPv6 dual-stack out of the box.
 
@@ -119,9 +119,9 @@ Embeds device information with each DNS query sent to NextDNS, enabling per-devi
 
 ---
 
-### `discovery_dns` — string (default: `""`)
+### `discovery_dns` — string (optional)
 
-The IP address of a DNS server used to look up LAN client hostnames. If left empty, the address learned automatically via DHCP is used (usually your router).
+The IP address of a DNS server used to look up LAN client hostnames. Leave this field empty to use the address learned automatically via DHCP (usually your router).
 
 Set this explicitly to your router's LAN IP for the most reliable hostname discovery:
 
@@ -276,6 +276,21 @@ Install the official **NextDNS** integration (`Settings → Integrations → Add
 This pairs well with the CLI add-on — the CLI handles local proxying and device identification, while the integration gives you HA sensors and automations based on your NextDNS stats.
 
 ---
+
+---
+
+## Security Rating
+
+This add-on achieves a rating of **3 out of 6** in Home Assistant's security scoring system.
+
+| Factor | Impact | Reason |
+|---|---|---|
+| Base score | +5 | Starting value |
+| `host_network: true` | -1 | Required — the CLI must bind to port 53 on the host network to serve LAN devices |
+| `NET_ADMIN` / `NET_RAW` privileges | -1 | Required — needed to open a privileged DNS socket on port 53 |
+| **Total** | **3/6** | — |
+
+The two point deductions cannot be avoided without fundamentally breaking the add-on's purpose. A score of 3/6 is normal for any add-on that needs host networking and privileged ports.
 
 ## Troubleshooting
 
