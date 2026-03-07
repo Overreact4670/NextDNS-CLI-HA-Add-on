@@ -11,12 +11,10 @@ LABEL \
     io.hass.arch="${BUILD_ARCH}"
 
 # Install NextDNS CLI from the official Alpine repository.
-# The key is fetched over HTTPS — wget validates the TLS certificate chain,
-# which provides integrity assurance without needing a hardcoded fingerprint
-# that would break on legitimate key rotations.
+# Note: the HA base image uses BusyBox wget which only supports -T for timeout.
+# The URL is HTTPS so TLS certificate validation provides integrity assurance.
 RUN set -e \
-    && wget --timeout=30 --tries=3 --https-only \
-        -O /etc/apk/keys/nextdns.pub https://repo.nextdns.io/nextdns.pub \
+    && wget -T 30 -O /etc/apk/keys/nextdns.pub https://repo.nextdns.io/nextdns.pub \
     && echo "https://repo.nextdns.io/apk" >> /etc/apk/repositories \
     && apk update \
     && apk add --no-cache nextdns \
