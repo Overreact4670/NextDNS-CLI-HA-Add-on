@@ -2,7 +2,7 @@ name: "NextDNS CLI"
 version: "2.0.0"
 slug: "nextdns_cli"
 description: "Run the NextDNS CLI as a local DNS-over-HTTPS proxy with full per-device identification"
-url: "https://github.com/Overreact4670/NextDNS-CLI-HA-Add-on"
+url: "https://github.com/Overreact4670/NextDNS-CLI-HA-App"
 arch:
   - amd64
   - aarch64
