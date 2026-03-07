@@ -1,4 +1,4 @@
-# NextDNS CLI Add-on
+# NextDNS CLI app
 
 Runs the [NextDNS CLI](https://github.com/nextdns/nextdns) as a local DNS-over-HTTPS (DoH) proxy on your Home Assistant machine, providing full per-device identification, multi-profile support, split-horizon DNS, and IPv4/IPv6 dual-stack out of the box.
 
@@ -6,7 +6,7 @@ Runs the [NextDNS CLI](https://github.com/nextdns/nextdns) as a local DNS-over-H
 
 ## Why use this instead of pointing your router's DNS at NextDNS directly?
 
-When you point your router at `45.90.28.0` (NextDNS's IP), all devices appear as a single external IP in the NextDNS dashboard — you lose per-device stats and filtering. This add-on runs the CLI proxy locally so every device is identified individually by hostname.
+When you point your router at `45.90.28.0` (NextDNS's IP), all devices appear as a single external IP in the NextDNS dashboard — you lose per-device stats and filtering. This app runs the CLI proxy locally so every device is identified individually by hostname.
 
 ```
 Your devices  →  HA machine port 53  →  NextDNS CLI  →  NextDNS cloud (DoH/HTTPS)
@@ -16,10 +16,10 @@ Your devices  →  HA machine port 53  →  NextDNS CLI  →  NextDNS cloud (DoH
 
 ## Quick Start
 
-1. Install the add-on and open the **Configuration** tab
+1. Install the app and open the **Configuration** tab
 2. Set your **Profile ID** (the 6-character code from [nextdns.io](https://nextdns.io))
 3. Optionally set `discovery_dns` to your router's LAN IP for best hostname detection
-4. Start the add-on
+4. Start the app
 5. In your router's DHCP settings, set the DNS server to your **Home Assistant machine's LAN IP**
 
 > **Important:** Do not enter NextDNS's IP addresses (`45.90.28.0` etc.) anywhere on your router — the CLI handles the upstream DoH connection itself.
@@ -110,7 +110,7 @@ listen:
   - "[::]:53"
 ```
 
-> **Note:** This add-on uses `host_network: true`, so it shares the HA machine's network stack. Port 53 on your HA machine will be claimed by this add-on — make sure nothing else is using it (e.g. `systemd-resolved`).
+> **Note:** This app uses `host_network: true`, so it shares the HA machine's network stack. Port 53 on your HA machine will be claimed by this app — make sure nothing else is using it (e.g. `systemd-resolved`).
 
 ---
 
@@ -217,13 +217,13 @@ Maximum number of DNS queries the CLI will handle simultaneously. Increasing thi
 
 ### `log_queries` — bool (default: `false`)
 
-Logs every DNS query to the add-on log. Very verbose — only useful for debugging which domains specific devices are resolving.
+Logs every DNS query to the app log. Very verbose — only useful for debugging which domains specific devices are resolving.
 
 ---
 
 ### `debug` — bool (default: `false`)
 
-Enables debug-level logging for the CLI daemon itself. Outputs internal state and connection information. Only useful when diagnosing add-on or upstream connectivity issues.
+Enables debug-level logging for the CLI daemon itself. Outputs internal state and connection information. Only useful when diagnosing app or upstream connectivity issues.
 
 ---
 
@@ -261,7 +261,7 @@ For most home setups, using only the IPv4 address as your DNS server is simpler 
 
 ## Using with the NextDNS Home Assistant Integration
 
-Install the official **NextDNS** integration (`Settings → Integrations → Add Integration → NextDNS`) alongside this add-on. It connects to the NextDNS API using your API key and exposes entities like:
+Install the official **NextDNS** integration (`Settings → Integrations → Add Integration → NextDNS`) alongside this app. It connects to the NextDNS API using your API key and exposes entities like:
 
 - Total queries count
 - Blocked queries count
@@ -269,13 +269,13 @@ Install the official **NextDNS** integration (`Settings → Integrations → Add
 - Device connection status
 - Button to clear DNS logs
 
-This pairs well with the CLI add-on — the CLI handles local proxying and device identification, while the integration gives you HA sensors and automations based on your NextDNS stats.
+This pairs well with the CLI app — the CLI handles local proxying and device identification, while the integration gives you HA sensors and automations based on your NextDNS stats.
 
 ---
 
 ## Security Rating
 
-This add-on achieves a rating of **4 out of 6** in Home Assistant's security scoring system.
+This app achieves a rating of **4 out of 6** in Home Assistant's security scoring system.
 
 | Factor | Impact | Reason |
 |---|---|---|
@@ -285,14 +285,14 @@ This add-on achieves a rating of **4 out of 6** in Home Assistant's security sco
 | AppArmor profile present | +1 | Restricts the nextdns process to only the files, paths, and network operations it legitimately needs |
 | **Total** | **4/6** | — |
 
-The two point deductions cannot be avoided without fundamentally breaking the add-on's purpose. The AppArmor profile recovers one point and also provides real security value — it prevents the nextdns process from accessing arbitrary parts of the filesystem or making unexpected system calls, even if the container were somehow compromised.
+The two point deductions cannot be avoided without fundamentally breaking the app's purpose. The AppArmor profile recovers one point and also provides real security value — it prevents the nextdns process from accessing arbitrary parts of the filesystem or making unexpected system calls, even if the container were somehow compromised.
 
 ---
 
 ## Troubleshooting
 
 **Queries not appearing in NextDNS dashboard**
-- Confirm the add-on is running (check the log tab)
+- Confirm the app is running (check the log tab)
 - Make sure `listen` includes `0.0.0.0:53` — `localhost:53` only accepts connections from the HA machine itself
 - Confirm your router's DHCP DNS is set to the HA machine's LAN IP, not NextDNS's IP directly
 - Check nothing else is bound to port 53 on the HA machine
@@ -302,7 +302,7 @@ The two point deductions cannot be avoided without fundamentally breaking the ad
 - Ensure `report_client_info` is `true`
 - Ensure `mdns` is `"all"` (or the correct interface name)
 
-**Add-on fails to start**
+**app fails to start**
 - Check that `profiles` contains at least one entry
 - Check the log for specific error messages
 - Enable `debug: true` temporarily for more detail
