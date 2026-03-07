@@ -12,7 +12,6 @@ ARGS=()
 
 # ---------------------------------------------------------------------------
 # PROFILES (required, repeatable)
-# Uses bashio array notation to safely handle values with special characters.
 # ---------------------------------------------------------------------------
 profile_count=0
 while read -r profile; do
@@ -32,13 +31,11 @@ bashio::log.info "Profiles configured: ${profile_count}"
 # FORWARDERS (optional, repeatable)
 # ---------------------------------------------------------------------------
 forwarder_count=0
-if bashio::config.exists 'forwarders' && [ "$(bashio::config 'forwarders[]' 2>/dev/null | wc -l)" -gt 0 ]; then
-    while read -r fwd; do
-        [ -z "${fwd}" ] && continue
-        ARGS+=("-forwarder" "${fwd}")
-        forwarder_count=$((forwarder_count + 1))
-    done <<< "$(bashio::config 'forwarders[]')"
-fi
+while read -r fwd; do
+    [ -z "${fwd}" ] && continue
+    ARGS+=("-forwarder" "${fwd}")
+    forwarder_count=$((forwarder_count + 1))
+done <<< "$(bashio::config 'forwarders[]' 2>/dev/null || true)"
 
 if [ "${forwarder_count}" -gt 0 ]; then
     bashio::log.info "Forwarders configured: ${forwarder_count}"
@@ -68,10 +65,13 @@ if bashio::config.true 'report_client_info'; then
     bashio::log.info "Client info reporting: enabled"
 fi
 
+# discovery_dns is optional (str?) — only add if actually set
 if bashio::config.exists 'discovery_dns' && bashio::config.has_value 'discovery_dns'; then
     DISCOVERY_DNS=$(bashio::config 'discovery_dns')
-    ARGS+=("-discovery-dns" "${DISCOVERY_DNS}")
-    bashio::log.info "Discovery DNS: ${DISCOVERY_DNS}"
+    if [ -n "${DISCOVERY_DNS}" ]; then
+        ARGS+=("-discovery-dns" "${DISCOVERY_DNS}")
+        bashio::log.info "Discovery DNS: ${DISCOVERY_DNS}"
+    fi
 fi
 
 MDNS=$(bashio::config 'mdns')
@@ -86,12 +86,11 @@ fi
 # CACHE
 # ---------------------------------------------------------------------------
 CACHE_SIZE=$(bashio::config 'cache_size')
-ARGS+=("-cache-size" "${CACHE_SIZE}")
-
 CACHE_MAX_AGE=$(bashio::config 'cache_max_age')
-ARGS+=("-cache-max-age" "${CACHE_MAX_AGE}")
-
 MAX_TTL=$(bashio::config 'max_ttl')
+
+ARGS+=("-cache-size" "${CACHE_SIZE}")
+ARGS+=("-cache-max-age" "${CACHE_MAX_AGE}")
 ARGS+=("-max-ttl" "${MAX_TTL}")
 
 bashio::log.info "Cache: size=${CACHE_SIZE}, max-age=${CACHE_MAX_AGE}, max-ttl=${MAX_TTL}"
@@ -116,9 +115,9 @@ fi
 # PERFORMANCE
 # ---------------------------------------------------------------------------
 TIMEOUT=$(bashio::config 'timeout')
-ARGS+=("-timeout" "${TIMEOUT}")
-
 MAX_INFLIGHT=$(bashio::config 'max_inflight_requests')
+
+ARGS+=("-timeout" "${TIMEOUT}")
 ARGS+=("-max-inflight-requests" "${MAX_INFLIGHT}")
 
 bashio::log.info "Performance: timeout=${TIMEOUT}, max-inflight=${MAX_INFLIGHT}"
