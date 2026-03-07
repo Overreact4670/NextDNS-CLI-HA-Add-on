@@ -1,0 +1,86 @@
+configuration:
+  profiles:
+    name: Profiles
+    description: >-
+      Your NextDNS profile ID(s). The first match wins — put specific conditions
+      before the default. Supports plain IDs ("abcdef") or conditional matching:
+      subnet ("192.168.1.0/24=abcdef"), MAC ("00:11:22:33:44:55=abcdef"),
+      or interface ("eth0=abcdef").
+  forwarders:
+    name: Forwarders
+    description: >-
+      Route specific domains to alternative DNS servers (split-horizon DNS).
+      Format: "domain=server" e.g. "corp.local=192.168.1.1".
+      Leave empty to send all queries to NextDNS.
+  listen:
+    name: Listen addresses
+    description: >-
+      Addresses and ports to listen on. Use "0.0.0.0:53" to accept queries
+      from all devices on your network. nextdns handles IPv6 automatically —
+      do not add "[::]:53" as it will cause a conflict.
+  report_client_info:
+    name: Report client info
+    description: >-
+      Send device hostnames to NextDNS for per-device stats and filtering.
+      Disable to make all devices appear anonymous.
+  discovery_dns:
+    name: Discovery DNS
+    description: >-
+      IP of your router or DNS server used to look up client hostnames.
+      Leave empty to auto-detect via DHCP. Set to your router's LAN IP
+      (e.g. 192.168.1.1) for the most reliable hostname detection.
+  mdns:
+    name: mDNS
+    description: >-
+      mDNS hostname discovery. "all" listens on all interfaces (recommended).
+      "disabled" turns off mDNS. Set to a specific interface name (e.g. eth0)
+      to limit discovery to that interface.
+  use_hosts:
+    name: Use hosts file
+    description: >-
+      Resolve names from the system /etc/hosts file before querying upstream.
+  cache_size:
+    name: Cache size
+    description: >-
+      Local DNS cache size. Accepts kB, MB, or GB (e.g. "10MB"). Set to "0"
+      to disable caching.
+  cache_max_age:
+    name: Cache max age
+    description: >-
+      Force cache entries stale after this duration regardless of TTL.
+      "0s" = disabled. Use to pick up NextDNS profile changes faster.
+  max_ttl:
+    name: Max TTL
+    description: >-
+      Cap the TTL advertised to clients, keeping their local caches short
+      so they rely on the CLI cache. "0s" = disabled.
+  bogus_priv:
+    name: Block private reverse lookups
+    description: >-
+      Answer reverse DNS lookups for private IP ranges (10.x, 192.168.x,
+      fc00::/7, fe80::/10 etc.) with NXDOMAIN instead of forwarding upstream.
+      Prevents leaking internal network topology.
+  detect_captive_portals:
+    name: Detect captive portals
+    description: >-
+      Temporarily fall back to unencrypted DNS when a captive portal is
+      detected (hotel/airport Wi-Fi). WARNING: Disables DoH while active.
+      Leave off on home networks.
+  timeout:
+    name: Timeout
+    description: >-
+      Maximum time to wait for an upstream NextDNS response before failing.
+      Increase slightly on high-latency connections (e.g. "10s").
+  max_inflight_requests:
+    name: Max inflight requests
+    description: >-
+      Maximum number of concurrent DNS queries. Increase on busy networks
+      with many devices, but note higher values use more memory.
+  log_queries:
+    name: Log all queries
+    description: >-
+      Log every DNS query to the add-on log. Very verbose — for debugging only.
+  debug:
+    name: Debug logging
+    description: >-
+      Enable debug-level daemon logging. For diagnosing connectivity issues only.
