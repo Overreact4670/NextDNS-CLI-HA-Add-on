@@ -1,5 +1,5 @@
 name: "NextDNS CLI"
-version: "2.0.0"
+version: "2.1.0"
 slug: "nextdns_cli"
 description: "Run the NextDNS CLI as a local DNS-over-HTTPS proxy with full per-device identification"
 url: "https://github.com/Overreact4670/NextDNS-CLI-HA-App"
@@ -16,112 +16,23 @@ privileged:
   - NET_RAW
 
 options:
-  # -------------------------------------------------------------------------
-  # PROFILES (required)
-  # Your NextDNS profile ID(s). The first match wins.
-  # Supports conditional matching — see DOCS.md for all formats:
-  #   Plain:        "abcdef"
-  #   IPv4 subnet:  "192.168.10.0/24=abcdef"
-  #   IPv6 subnet:  "fd00:a::/64=abcdef"
-  #   MAC address:  "00:1c:42:2e:60:4a=abcdef"
-  #   Interface:    "eth0=abcdef"
-  # -------------------------------------------------------------------------
   profiles:
     - "YOUR_PROFILE_ID"
-
-  # -------------------------------------------------------------------------
-  # FORWARDERS (optional)
-  # Route specific domains to alternative DNS servers (split-horizon DNS).
-  # Format: [DOMAIN=]SERVER[,SERVER...]
-  #   "corp.local=192.168.1.1"
-  #   "corp.local=[fd00::1],192.168.1.1"   (IPv6 first, IPv4 fallback)
-  #   "corp.local=https://doh.example.com#1.2.3.4"  (DoH with bootstrap IP)
-  #   "=192.168.1.1"                        (catch-all forwarder)
-  # -------------------------------------------------------------------------
   forwarders: []
-
-  # -------------------------------------------------------------------------
-  # LISTEN ADDRESSES
-  # Addresses and ports the proxy listens on.
-  # 0.0.0.0:53  = all IPv4 interfaces (required to serve LAN devices)
-  # [::]:53     = all IPv6 interfaces
-  # Add specific IPs to restrict to certain interfaces.
-  # -------------------------------------------------------------------------
   listen:
     - "0.0.0.0:53"
-    - "[::]:53"
-
-  # -------------------------------------------------------------------------
-  # CLIENT IDENTIFICATION
-  # -------------------------------------------------------------------------
-  # Send device hostnames to NextDNS for per-device stats and filtering.
   report_client_info: true
-
-  # IP of your router/DNS server used to discover client hostnames.
-  # Accepts IPv4 (192.168.1.1) or bracketed IPv6 ([fd00::1]).
-  # Leave empty to use the address learned automatically via DHCP.
   discovery_dns: ""
-
-  # mDNS hostname discovery.
-  # "all"       = listen on all interfaces (recommended)
-  # "eth0"      = limit to a specific interface
-  # "disabled"  = disable mDNS entirely
   mdns: "all"
-
-  # Resolve names from the system /etc/hosts file before querying upstream.
   use_hosts: true
-
-  # -------------------------------------------------------------------------
-  # CACHE
-  # -------------------------------------------------------------------------
-  # Local DNS cache size. Use "0" to disable. Accepts kB, MB, GB.
   cache_size: "10MB"
-
-  # Force cache entries stale after this duration regardless of their TTL.
-  # "0s" = disabled (honour actual TTLs).
-  # Useful to pick up NextDNS profile changes faster.
   cache_max_age: "0s"
-
-  # Maximum TTL advertised to clients. Keeps client-side caches short so
-  # devices rely on the CLI cache rather than their own. Best used with
-  # cache enabled. "0s" = disabled.
   max_ttl: "5s"
-
-  # -------------------------------------------------------------------------
-  # PRIVACY
-  # -------------------------------------------------------------------------
-  # Answer all reverse lookups for private/reserved address ranges with
-  # NXDOMAIN instead of forwarding upstream. Covers:
-  #   IPv4: 10.x, 172.16.x, 192.168.x, 169.254.x, 127.x
-  #   IPv6: ULA (fc00::/7), link-local (fe80::/10), loopback (::1)
   bogus_priv: true
-
-  # -------------------------------------------------------------------------
-  # CAPTIVE PORTAL DETECTION
-  # -------------------------------------------------------------------------
-  # Automatically detect captive portals (e.g. hotel/airport Wi-Fi) and
-  # temporarily fall back to system DNS so the login page can be reached.
-  # WARNING: When active, this temporarily disables DoH and sends unencrypted
-  # DNS queries. Disable if you don't need it or are on a trusted network.
   detect_captive_portals: false
-
-  # -------------------------------------------------------------------------
-  # PERFORMANCE
-  # -------------------------------------------------------------------------
-  # Maximum time allowed for an upstream DNS request before failing.
   timeout: "5s"
-
-  # Maximum number of concurrent DNS queries. Increase on busy networks,
-  # but note that higher values also increase memory usage.
   max_inflight_requests: 256
-
-  # -------------------------------------------------------------------------
-  # LOGGING / DEBUG
-  # -------------------------------------------------------------------------
-  # Log every DNS query to the add-on log. Very verbose — for debugging only.
   log_queries: false
-
-  # Enable debug-level logging for the CLI daemon itself.
   debug: false
 
 schema:
@@ -132,7 +43,7 @@ schema:
   listen:
     - str
   report_client_info: bool
-  discovery_dns: str
+  discovery_dns: str?
   mdns: str
   use_hosts: bool
   cache_size: str
