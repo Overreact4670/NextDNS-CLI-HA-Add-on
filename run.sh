@@ -12,15 +12,16 @@ ARGS=()
 
 # ---------------------------------------------------------------------------
 # PROFILES (required, repeatable)
+# Uses bashio array notation to safely handle values with special characters.
 # ---------------------------------------------------------------------------
 profile_count=0
-for profile in $(bashio::config 'profiles'); do
+while read -r profile; do
     ARGS+=("-profile" "${profile}")
     profile_count=$((profile_count + 1))
-done
+done <<< "$(bashio::config 'profiles[]')"
 
 if [ "${profile_count}" -eq 0 ]; then
-    bashio::log.fatal "No profiles configured! Set at least one profile ID in the app options."
+    bashio::log.fatal "No profiles configured! Set at least one profile ID in the App options."
     exit 1
 fi
 
@@ -30,10 +31,13 @@ bashio::log.info "Profiles configured: ${profile_count}"
 # FORWARDERS (optional, repeatable)
 # ---------------------------------------------------------------------------
 forwarder_count=0
-for fwd in $(bashio::config 'forwarders'); do
-    ARGS+=("-forwarder" "${fwd}")
-    forwarder_count=$((forwarder_count + 1))
-done
+if bashio::config.exists 'forwarders' && [ "$(bashio::config 'forwarders[]' 2>/dev/null | wc -l)" -gt 0 ]; then
+    while read -r fwd; do
+        [ -z "${fwd}" ] && continue
+        ARGS+=("-forwarder" "${fwd}")
+        forwarder_count=$((forwarder_count + 1))
+    done <<< "$(bashio::config 'forwarders[]')"
+fi
 
 if [ "${forwarder_count}" -gt 0 ]; then
     bashio::log.info "Forwarders configured: ${forwarder_count}"
@@ -43,14 +47,14 @@ fi
 # LISTEN ADDRESSES (repeatable)
 # ---------------------------------------------------------------------------
 listen_count=0
-for addr in $(bashio::config 'listen'); do
+while read -r addr; do
+    [ -z "${addr}" ] && continue
     ARGS+=("-listen" "${addr}")
     listen_count=$((listen_count + 1))
     bashio::log.info "Listening on: ${addr}"
-done
+done <<< "$(bashio::config 'listen[]')"
 
 if [ "${listen_count}" -eq 0 ]; then
-    # Safety fallback — should never happen given the schema default
     bashio::log.warning "No listen addresses configured, falling back to 0.0.0.0:53"
     ARGS+=("-listen" "0.0.0.0:53")
 fi
@@ -123,7 +127,7 @@ bashio::log.info "Performance: timeout=${TIMEOUT}, max-inflight=${MAX_INFLIGHT}"
 # ---------------------------------------------------------------------------
 if bashio::config.true 'log_queries'; then
     ARGS+=("-log-queries")
-    bashio::log.warning "Query logging enabled — this is verbose, use for debugging only"
+    bashio::log.warning "Query logging enabled — verbose, use for debugging only"
 fi
 
 if bashio::config.true 'debug'; then
