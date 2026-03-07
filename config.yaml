@@ -21,6 +21,7 @@ options:
   forwarders: []
   listen:
     - "0.0.0.0:53"
+    - "[::]:53"
   report_client_info: true
   discovery_dns: ""
   mdns: "all"
