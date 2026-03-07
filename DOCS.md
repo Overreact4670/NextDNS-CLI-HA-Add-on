@@ -1,4 +1,4 @@
-# NextDNS CLI App
+# NextDNS CLI Add-on
 
 Runs the [NextDNS CLI](https://github.com/nextdns/nextdns) as a local DNS-over-HTTPS (DoH) proxy on your Home Assistant machine, providing full per-device identification, multi-profile support, split-horizon DNS, and IPv4/IPv6 dual-stack out of the box.
 
@@ -6,7 +6,7 @@ Runs the [NextDNS CLI](https://github.com/nextdns/nextdns) as a local DNS-over-H
 
 ## Why use this instead of pointing your router's DNS at NextDNS directly?
 
-When you point your router at `45.90.28.0` (NextDNS's IP), all devices appear as a single external IP in the NextDNS dashboard — you lose per-device stats and filtering. This App runs the CLI proxy locally so every device is identified individually by hostname.
+When you point your router at `45.90.28.0` (NextDNS's IP), all devices appear as a single external IP in the NextDNS dashboard — you lose per-device stats and filtering. This add-on runs the CLI proxy locally so every device is identified individually by hostname.
 
 ```
 Your devices  →  HA machine port 53  →  NextDNS CLI  →  NextDNS cloud (DoH/HTTPS)
@@ -16,10 +16,10 @@ Your devices  →  HA machine port 53  →  NextDNS CLI  →  NextDNS cloud (DoH
 
 ## Quick Start
 
-1. Install the App and open the **Configuration** tab
+1. Install the add-on and open the **Configuration** tab
 2. Set your **Profile ID** (the 6-character code from [nextdns.io](https://nextdns.io))
 3. Optionally set `discovery_dns` to your router's LAN IP for best hostname detection
-4. Start the App
+4. Start the add-on
 5. In your router's DHCP settings, set the DNS server to your **Home Assistant machine's LAN IP**
 
 > **Important:** Do not enter NextDNS's IP addresses (`45.90.28.0` etc.) anywhere on your router — the CLI handles the upstream DoH connection itself.
@@ -92,25 +92,24 @@ forwarders:
 
 ### `listen` — list
 
-Addresses and ports the proxy listens on. The default binds to all IPv4 and IPv6 interfaces, which is required to accept queries from other devices on your network.
+Addresses and ports the proxy listens on.
+
+> **IPv6 note:** nextdns automatically opens dual-stack IPv6 sockets alongside any IPv4 address you specify. You do **not** need to add `[::]:53` — doing so will cause a startup error (`address already in use`) because nextdns has already bound `:::53` internally. Use `0.0.0.0:53` only.
 
 | Value | Description |
 |---|---|
-| `0.0.0.0:53` | All IPv4 interfaces — **required for LAN devices to reach the proxy** |
-| `[::]:53` | All IPv6 interfaces |
+| `0.0.0.0:53` | All IPv4 interfaces — nextdns also opens IPv6 automatically |
 | `192.168.1.100:53` | Specific IPv4 interface only |
 | `[fd00::100]:53` | Specific IPv6 interface only |
-| `localhost:53` | IPv4 loopback only — HA machine itself only, not LAN devices |
-| `[::1]:53` | IPv6 loopback only — HA machine itself only, not LAN devices |
+| `localhost:53` | IPv4 loopback only — HA machine itself, not LAN devices |
 
-**Default (recommended — serves all LAN devices over IPv4 and IPv6):**
+**Default (recommended):**
 ```yaml
 listen:
   - "0.0.0.0:53"
-  - "[::]:53"
 ```
 
-> **Note:** This App uses `host_network: true`, so it shares the HA machine's network stack. Port 53 on your HA machine will be claimed by this App — make sure nothing else is using it (e.g. `systemd-resolved`).
+> **Note:** This add-on uses `host_network: true`, so it shares the HA machine's network stack. Port 53 on your HA machine will be claimed by this add-on — make sure nothing else is using it (e.g. `systemd-resolved`).
 
 ---
 
@@ -217,13 +216,13 @@ Maximum number of DNS queries the CLI will handle simultaneously. Increasing thi
 
 ### `log_queries` — bool (default: `false`)
 
-Logs every DNS query to the App log. Very verbose — only useful for debugging which domains specific devices are resolving.
+Logs every DNS query to the add-on log. Very verbose — only useful for debugging which domains specific devices are resolving.
 
 ---
 
 ### `debug` — bool (default: `false`)
 
-Enables debug-level logging for the CLI daemon itself. Outputs internal state and connection information. Only useful when diagnosing App or upstream connectivity issues.
+Enables debug-level logging for the CLI daemon itself. Outputs internal state and connection information. Only useful when diagnosing add-on or upstream connectivity issues.
 
 ---
 
@@ -249,19 +248,24 @@ Check the **NextDNS dashboard → Logs** — you should see queries appearing wi
 
 ## IPv6 Notes
 
-The default `listen` config includes `[::]:53` for IPv6. However, a stable IPv6 address on your HA machine is needed before you can use it as a DNS server for other devices.
+nextdns automatically handles IPv6 — when you bind to `0.0.0.0:53`, it also opens `:::53` internally, so both IPv4 and IPv6 DNS queries from LAN devices are served without any extra configuration.
 
-- **`fe80::` (link-local)** — not usable as a DNS server address
-- **`2601::` / `2001::` (ISP-assigned global)** — changes periodically, not reliable
-- **`fd00::` (ULA)** — stable private IPv6, ideal for DNS — requires manual assignment or router ULA prefix advertisement
+What you **don't** need to do:
+- Add `[::]:53` to the listen list (causes a port conflict)
+- Configure a separate IPv6 DNS server address on your router
 
-For most home setups, using only the IPv4 address as your DNS server is simpler and works perfectly — devices still get AAAA records back, they just ask via IPv4.
+What matters for per-device IPv6 identification:
+- **`fe80::` (link-local)** — not usable as a DNS server address on the router
+- **`2601::` / `2001::` (ISP-assigned global)** — changes periodically, not reliable as a DNS server address
+- **`fd00::` (ULA)** — stable private IPv6, usable as a DNS address — but requires manual assignment
+
+For most home setups, pointing your router's DHCP at your HA machine's **IPv4** address is all you need. Devices will still send and receive AAAA records (IPv6 addresses) — they just ask for them via IPv4 DNS.
 
 ---
 
 ## Using with the NextDNS Home Assistant Integration
 
-Install the official **NextDNS** integration (`Settings → Integrations → Add Integration → NextDNS`) alongside this App. It connects to the NextDNS API using your API key and exposes entities like:
+Install the official **NextDNS** integration (`Settings → Integrations → Add Integration → NextDNS`) alongside this add-on. It connects to the NextDNS API using your API key and exposes entities like:
 
 - Total queries count
 - Blocked queries count
@@ -269,14 +273,14 @@ Install the official **NextDNS** integration (`Settings → Integrations → Add
 - Device connection status
 - Button to clear DNS logs
 
-This pairs well with the CLI App — the CLI handles local proxying and device identification, while the integration gives you HA sensors and automations based on your NextDNS stats.
+This pairs well with the CLI add-on — the CLI handles local proxying and device identification, while the integration gives you HA sensors and automations based on your NextDNS stats.
 
 ---
 
 ## Troubleshooting
 
 **Queries not appearing in NextDNS dashboard**
-- Confirm the App is running (check the log tab)
+- Confirm the add-on is running (check the log tab)
 - Make sure `listen` includes `0.0.0.0:53` — `localhost:53` only accepts connections from the HA machine itself
 - Confirm your router's DHCP DNS is set to the HA machine's LAN IP, not NextDNS's IP directly
 - Check nothing else is bound to port 53 on the HA machine
@@ -286,7 +290,7 @@ This pairs well with the CLI App — the CLI handles local proxying and device i
 - Ensure `report_client_info` is `true`
 - Ensure `mdns` is `"all"` (or the correct interface name)
 
-**App fails to start**
+**Add-on fails to start**
 - Check that `profiles` contains at least one entry
 - Check the log for specific error messages
 - Enable `debug: true` temporarily for more detail
