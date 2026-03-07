@@ -24,7 +24,7 @@ Full-featured NextDNS CLI proxy supporting:
 ## Installation
 
 1. Click the button above, **or** go to **Settings → Apps → App Store → ⋮ → Repositories**
-2. Add: `(https://github.com/Overreact4670/NextDNS-CLI-HA-App`
+2. Add: `https://github.com/Overreact4670/NextDNS-CLI-HA-App`
 3. Find **NextDNS CLI** in the store and install it
 4. Set your `profile_id` in the Configuration tab and start the App
 5. Point your router's DHCP DNS to your Home Assistant machine's LAN IP
