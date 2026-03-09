@@ -23,7 +23,7 @@ Full-featured NextDNS CLI proxy supporting:
 
 ## Installation
 
-1. Click the button above, **or** go to **Settings → Add-ons → Add-on Store → ⋮ → Repositories**
+1. Click the button above, **or** go to **Settings → Apps → App Store → ⋮ → Repositories**
 2. Add: `https://github.com/Overreact4670/NextDNS-CLI-HA-App`
 3. Find **NextDNS CLI** in the store and install it
 4. Set your `profiles` in the Configuration tab and start the App
