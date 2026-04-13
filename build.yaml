@@ -1,6 +1,7 @@
 # Pin to a specific stable base image version for reproducible builds.
 # Check latest versions at: https://github.com/home-assistant/docker-base/releases
+# Note: armv7 was deprecated by Home Assistant in May 2025 (unsupported from 2025.12 onwards).
+# Multi-arch images available from 2026.03.1 release onwards.
 build_from:
   amd64: ghcr.io/home-assistant/amd64-base:3.21
   aarch64: ghcr.io/home-assistant/aarch64-base:3.21
-  armv7: ghcr.io/home-assistant/armv7-base:3.21

@@ -1,12 +1,11 @@
 name: "NextDNS CLI"
-version: "2.3.0"
+version: "2.4.2"
 slug: "nextdns_cli"
 description: "Run the NextDNS CLI as a local DNS-over-HTTPS proxy with full per-device identification"
 url: "https://github.com/Overreact4670/NextDNS-CLI-HA-App"
 arch:
   - amd64
   - aarch64
-  - armv7
 startup: system
 boot: auto
 init: false
@@ -22,6 +21,7 @@ options:
   listen:
     - "0.0.0.0:53"
   report_client_info: true
+  discovery_dns: ""
   mdns: "all"
   use_hosts: true
   cache_size: "10MB"

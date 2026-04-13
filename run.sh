@@ -7,6 +7,7 @@
 # ===========================================================================
 
 bashio::log.info "Initialising NextDNS CLI App..."
+bashio::log.info "NextDNS CLI version: $(nextdns version 2>&1 || echo 'unknown')"
 
 ARGS=()
 
@@ -67,13 +68,11 @@ if bashio::config.true 'report_client_info'; then
     bashio::log.info "Client info reporting: enabled"
 fi
 
-# discovery_dns is optional (str?) — only pass the flag if the user set a value
-if bashio::config.exists 'discovery_dns'; then
+# discovery_dns is optional — only pass the flag if the user set a non-empty value
+if bashio::config.has_value 'discovery_dns'; then
     DISCOVERY_DNS=$(bashio::config 'discovery_dns')
-    if [ -n "${DISCOVERY_DNS}" ] && [ "${DISCOVERY_DNS}" != "null" ]; then
-        ARGS+=("-discovery-dns" "${DISCOVERY_DNS}")
-        bashio::log.info "Discovery DNS: ${DISCOVERY_DNS}"
-    fi
+    ARGS+=("-discovery-dns" "${DISCOVERY_DNS}")
+    bashio::log.info "Discovery DNS: ${DISCOVERY_DNS}"
 fi
 
 MDNS=$(bashio::config 'mdns')

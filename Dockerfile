@@ -7,10 +7,11 @@ ARG BUILD_VERSION
 # Labels for HA Supervisor image management
 LABEL \
     io.hass.version="${BUILD_VERSION}" \
-    io.hass.type="addon" \
+    io.hass.type="app" \
     io.hass.arch="${BUILD_ARCH}"
 
 # Install NextDNS CLI from the official Alpine repository.
+# This installs the latest available version (1.47.2 as of 2026-04-13).
 # Note: the HA base image uses BusyBox wget which only supports -T for timeout.
 # The URL is HTTPS so TLS certificate validation provides integrity assurance.
 RUN set -e \
